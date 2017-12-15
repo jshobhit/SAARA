@@ -10,8 +10,8 @@
 #define PY A1  // UD joystick
 
 #define numOfSteppers 4                  // SM1 SM2 EM1 EM2
-#define MODEBUTTON 40
-#define MOTORSPEED 900
+#define MODEPIN 41
+#define CALIPIN 42
 
 #include <Servo.h>
 
@@ -67,8 +67,10 @@ void setup() {
   pinMode(sm2.prox, INPUT);
   pinMode(em1.prox, INPUT);
   pinMode(40, INPUT_PULLUP);
-  pinMode(41, INPUT_PULLUP);
+  pinMode(42, INPUT_PULLUP);
   hm1.attach(12);
+
+  angle = 55;
 
   }
 
@@ -78,44 +80,49 @@ volatile int modeFlag = 0;
 volatile int caliFlag = 0;
 
 int val=0;
- int scale;
 
 void loop(){
 
  hm1.write(150);   
   buttoncheck();
- 
+  if(modeFlag){
+    mode = !mode;
+    modeFlag = 0;
+  }
   if(caliFlag){
     initialize_motors();
     caliFlag = 0;
   }
 
-
+  int motspeed;
   x = analogRead(A1);
   y = analogRead(A0);
 
-  hm1.write(150);
+
 // MODE CONTROL BLOCKS //
 
 
 //**************************************************************** MODE 1 **********************************************************************************//
 //********************************************************* X axis controls SM1 ****************************************************************************//
 //********************************************************* Y axis controls UP/DOWN ************************************************************************//
-  if(digitalRead(MODEBUTTON)){
+  if(mode){
     
 //**************************************************************************************************************************************************//
 //********************************************************* SM1 Control ****************************************************************************//
 //**************************************************************************************************************************************************//
     if (x > 550) {
- 
-     digitalWrite(sm1.dirpin, HIGH); // Change HIGH to LOW if you want to switch the direction of motor wrt joystick movement
-      makeStep(sm1.pin, 800); // Change 1000 to change speed. Low value = High Speed, but not recommended
+      //if( x < 300) { motspeed = 800; } else { motspeed = 2000; }
+      if(x > 800) { motspeed = 800; } else { motspeed = 2000; }
+     digitalWrite(sm1.dirpin, LOW); // Change HIGH to LOW if you want to switch the direction of motor wrt joystick movement
+      makeStep(sm1.pin, motspeed); // Change 1000 to change speed. Low value = High Speed, but not recommended
       sm1.step--;
 
       }
-    else if (x < 450) {
-      digitalWrite(sm1.dirpin, LOW); // Change LOW to HIGH if you want to switch the direction of motor wrt joystick movement
-      makeStep(sm1.pin, 800); // Change 1000 to change speed. Low value = High Speed, but not recommended
+    else if (x < 500) {
+      if( x < 300) { motspeed = 800; } else { motspeed = 2000; }
+      //if(x > 800) { motspeed = 800; } else { motspeed = 2000; }
+      digitalWrite(sm1.dirpin, HIGH); // Change LOW to HIGH if you want to switch the direction of motor wrt joystick movement
+      makeStep(sm1.pin, motspeed); // Change 1000 to change speed. Low value = High Speed, but not recommended
       sm1.step++;
 
       }
@@ -126,18 +133,19 @@ void loop(){
 //******************************************************************************************************************************************************//
 //********************************************************* Up/Down Control ****************************************************************************//
 //******************************************************************************************************************************************************//
-  
+  int scale; 
   scale = 2;
 
-    if(y < 450){
-    
+    if(y < 500){
+      if( y < 300) { motspeed = 800; } else { motspeed = 2000; }
+      //if(y > 800) { motspeed = 800; } else { motspeed = 2000; }
         if(sm2.step > 1200){
             
           digitalWrite(sm2.dirpin, LOW);
           digitalWrite(em1.dirpin, LOW);  
         
         //makeStep2(em1.pin, sm2.pin,1000);
-        makeScaledStep(em1.pin, sm2.pin, 1000, 0.7);
+        makeScaledStep(em1.pin, sm2.pin, motspeed, 0.7);
         //makeSteps(em1.pin, 1000, scale);
         //makeStep(sm2.pin, 1000);
         em1.step += scale;
@@ -149,15 +157,14 @@ void loop(){
             digitalWrite(sm2.dirpin, HIGH);
         
         //makeStep2(em1.pin, sm2.pin,1000);
-        makeScaledStep(em1.pin, sm2.pin, 1000, 0.7);
+        makeScaledStep(em1.pin, sm2.pin, motspeed, 0.7);
         //makeSteps(em1.pin, 1000, scale);
         //makeStep(sm2.pin, 1000);
         em1.step += scale; 
           sm2.step++;
          
          }
-        // MoveServo(em1.step, sm2.step);
-       }
+       
   //       
   //        int ix = round(getDegree(27, em1.step));
   //        angle = round(map(ix, 20, 120, 135, 175));
@@ -165,9 +172,10 @@ void loop(){
   //        
   //      
 
-          
+          }
       else if (y > 550) {
-        
+        //if( y < 300) { motspeed = 800; } else { motspeed = 2000; }
+        if(y > 800) { motspeed = 800; } else { motspeed = 2000; }
           if(sm2.step > 1200){
             sm2.dir = HIGH;
             scale = 2;
@@ -182,13 +190,15 @@ void loop(){
           digitalWrite(sm2.dirpin,sm2.dir);
           digitalWrite(em1.dirpin, HIGH);    
           
-          makeSteps(em1.pin, 800, scale);
-          makeStep(sm2.pin, 800);
+          makeSteps(em1.pin, motspeed, scale);
+          makeStep(sm2.pin, motspeed);
           
           //makeScaledStep(em1.pin, sm2.pin, 1000, ((100)/(63*3)));
           em1.step -= scale;   
           
-         // MoveServo(em1.step, sm2.step);
+  //        int ix = round(getDegree(27, em1.step));
+  //        angle = round(map(ix, 20, 120, 95, 135));
+  //        hm1.write(angle);
           }
 
         
@@ -208,23 +218,24 @@ void loop(){
 //**************************************************************************************************************************************************//
 //********************************************************* SM1 Control ****************************************************************************//
 //**************************************************************************************************************************************************//
-   if (x > 550) {
- 
-     digitalWrite(sm1.dirpin, HIGH); // Change HIGH to LOW if you want to switch the direction of motor wrt joystick movement
-      makeStep(sm1.pin, 800); // Change 1000 to change speed. Low value = High Speed, but not recommended
+    if (x > 550) {
+      //if( x < 300) { motspeed = 800; } else { motspeed = 2000; }
+      if(x > 800) { motspeed = 800; } else { motspeed = 2000; }
+     digitalWrite(sm1.dirpin, LOW); // Change HIGH to LOW if you want to switch the direction of motor wrt joystick movement
+      makeStep(sm1.pin, motspeed); // Change 1000 to change speed. Low value = High Speed, but not recommended
       sm1.step--;
 
       }
-    else if (x < 450) {
-      digitalWrite(sm1.dirpin, LOW); // Change LOW to HIGH if you want to switch the direction of motor wrt joystick movement
-      makeStep(sm1.pin, 800); // Change 1000 to change speed. Low value = High Speed, but not recommended
+    else if (x < 500) {
+      if( x < 300) { motspeed = 800; } else { motspeed = 2000; }
+      //if(x > 800) { motspeed = 800; } else { motspeed = 2000; }
+      digitalWrite(sm1.dirpin, HIGH); // Change LOW to HIGH if you want to switch the direction of motor wrt joystick movement
+      makeStep(sm1.pin, motspeed); // Change 1000 to change speed. Low value = High Speed, but not recommended
       sm1.step++;
 
       }
-    else {
-   
+    else { 
       }
-
   
 
 
@@ -232,15 +243,17 @@ void loop(){
 //********************************************************* Fwd/Bkwd Control ***************************************************************************//
 //******************************************************************************************************************************************************//
 
-     if(y < 450){
-      
+     if(y< 500){
+        if( y < 300) { motspeed = 800; } else { motspeed = 2000; }
+        //if(y > 800) { motspeed = 800; } else { motspeed = 2000; }
         if(sm2.step > 4000){
             digitalWrite(sm2.dirpin, HIGH);
                   sm2.step++;
         digitalWrite(em1.dirpin, LOW);
         
         //makeStep2(em1.pin, sm2.pin,1000);
-        makeScaledStep(em1.pin, sm2.pin, 800, (1.8));
+        makeScaledStep(em1.pin, sm2.pin, motspeed, (1.8));
+        
           }
 
           else{
@@ -249,31 +262,33 @@ void loop(){
         digitalWrite(em1.dirpin, LOW);
         
         //makeStep2(em1.pin, sm2.pin,1000);
-        makeScaledStep(em1.pin, sm2.pin, 800, (3.5));
+        makeScaledStep(em1.pin, sm2.pin, motspeed, (3.5));
               sm2.step ++;
+            
             }
-        //MoveServo(em1.step, sm2.step);
+
 
          }
 
      else if (y > 550){
-
+       //if( y < 300) { motspeed = 800; } else { motspeed = 2000; }
+      if(y > 800) { motspeed = 800; } else { motspeed = 2000; }
         if(sm2.step > 4000){
             digitalWrite(sm2.dirpin, LOW);
                  sm2.step--;
         digitalWrite(em1.dirpin, HIGH);
         //makeStep2(em1.pin, sm2.pin,1000);
-        makeScaledStep(em1.pin, sm2.pin, 850, (1.8));
-            }
+        makeScaledStep(em1.pin, sm2.pin, motspeed, (1.8));
+           }
         else{
           digitalWrite(sm2.dirpin, LOW);
                sm2.step--;
         digitalWrite(em1.dirpin, HIGH);
         //makeStep2(em1.pin, sm2.pin,1000);
-        makeScaledStep(em1.pin, sm2.pin, 850, (3.5));
+        makeScaledStep(em1.pin, sm2.pin, motspeed, (3.5));
             }
 
-       // MoveServo(em1.step, sm2.step);
+   
         }
      else {
       }
@@ -293,26 +308,14 @@ void loop(){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-void MoveServo(int em1step, int sm2step) {
-  float d1, d2, d3;
-  d1 = (sm2step * 1.8) / 100;
-  d2 = (em1step * 1.8) / 51;
-  d3 = 50 - (d1 + d2);
-
-  hm1.write(fabs(round(d3)));
-  
-}
-
-
 void buttoncheck(){
-  
-  caliFlag = digitalRead(41);
+  modeFlag = !digitalRead(42);
+  caliFlag = !digitalRead(40);
 }
 
 int initialize_motors(){
 
-  
+ 
   hm1.write(60);
  
   digitalWrite(em1.dirpin, LOW);
@@ -330,8 +333,8 @@ int initialize_motors(){
   }
   sm1.step = 0;
   digitalWrite(sm1.dirpin, HIGH);
-  makeSteps(sm1.pin, 800, 2800);
-  sm1.step = 2800;
+  makeSteps(sm1.pin, 800, 2500);
+  sm1.step = 2500;
 
   digitalWrite(sm2.dirpin, HIGH);
   while (!digitalRead(3)) {
@@ -348,18 +351,18 @@ int initialize_motors(){
 
 void makeStep(int motor, int speed) {
   digitalWrite(motor, HIGH);
-  delayMicroseconds(MOTORSPEED);
+  delayMicroseconds(speed);
   digitalWrite(motor, LOW);
-  delayMicroseconds(MOTORSPEED);
+  delayMicroseconds(speed);
 }
 
 void makeStep2(int motor1, int motor2, int speed){
   digitalWrite(motor1, HIGH);
   digitalWrite(motor2, HIGH);
-  delayMicroseconds(MOTORSPEED);
+  delayMicroseconds(speed);
   digitalWrite(motor1, LOW);
   digitalWrite(motor2, LOW);
-  delayMicroseconds(MOTORSPEED);
+  delayMicroseconds(speed);
 }
 
 void makeDeg(int motor, int speed){
