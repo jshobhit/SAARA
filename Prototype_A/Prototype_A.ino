@@ -118,10 +118,10 @@ void loop(){
   if(digitalRead(mode)){
   
     if(digitalRead(JOYSTICK_BUTTON)){
-      FwdBk();
+      FwdBk();      
     }
     else{
-      UpDown();
+      maxReach();
     }
   }
   
@@ -137,6 +137,7 @@ void loop(){
       makeStep(sm1.pin, 800); 
     }
   }
+  Serial.println(em1.step); 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,8 +180,8 @@ void UpDown(){
     pos+= 0.3;
     delayMicroseconds(100);    
   }
-  
-  else if(y<150 && y_accel > -170){
+   
+   if(y<150 && y_accel > -170){
     digitalWrite(em1.dirpin, LOW);
     digitalWrite(sm2.dirpin, HIGH); 
     makeScaledStep(em1.pin, sm2.pin, 800, 0.5);
@@ -203,39 +204,100 @@ void UpDown(){
   }
 }
 
-
-void FwdBk(){
-    if (y > 600 && sm2.step >= 1620){ 
-    digitalWrite(em1.dirpin, LOW);
-    digitalWrite(sm2.dirpin, HIGH);  
-    makeScaledStep(sm2.pin, em1.pin, 800, 0.5);
-    em1.step -= 5;
-    sm2.step += 10;   
+void up(){
+  if (y > 600 && y_accel > -170 && em2.step <= 6010){ 
+    digitalWrite(em1.dirpin, HIGH);
+    digitalWrite(sm2.dirpin, LOW);  
+    makeScaledStep(em1.pin, sm2.pin, 800, 0.5);
+    em1.step += 10;
+    sm2.step += 5;
+    hm1.write(pos);
+    pos+= 0.3;
+    delayMicroseconds(100);    
   }
 
-  else if(y > 600 && sm2.step <= 1620){
+  else if(y > 600 && y_accel < -170 && em2.step <= 6010){
+    digitalWrite(em1.dirpin, HIGH);
+    digitalWrite(sm2.dirpin, HIGH); 
+    makeScaledStep(em1.pin, sm2.pin, 800, 0.5);
+    em1.step += 10;
+    sm2.step -= 5;
+    hm1.write(pos);
+    pos+= 0.3;
+    delayMicroseconds(100);    
+  }
+}
+
+void down(){ 
+   if(y<150 && y_accel > -170){
     digitalWrite(em1.dirpin, LOW);
     digitalWrite(sm2.dirpin, HIGH); 
-    makeScaledStep(sm2.pin, em1.pin, 800, 1.1);
-    em1.step -= 5;
-    sm2.step += 10;   
-  }
-  
-  else if(y<150 && sm2.step >= 1620){
-    digitalWrite(em1.dirpin, HIGH);
-    digitalWrite(sm2.dirpin, LOW); 
-    makeScaledStep(sm2.pin, em1.pin, 800, 0.5);
-    em1.step += 5;
-    sm2.step -= 10;   
+    makeScaledStep(em1.pin, sm2.pin, 800, 0.5);
+    em1.step -= 10;
+    sm2.step -= 5;
+    hm1.write(pos);
+    pos-= 0.3;
+    delayMicroseconds(100);   
   }
 
-  else if(y<150 && sm2.step <= 1620){
-    digitalWrite(em1.dirpin, HIGH); 
+  else if(y<150 && y_accel < -170){
+    digitalWrite(em1.dirpin, LOW); 
     digitalWrite(sm2.dirpin, LOW); 
-    makeScaledStep(sm2.pin, em1.pin, 800, 1.1);
-    em1.step += 5;
-    sm2.step -= 10;
+    makeScaledStep(em1.pin,sm2.pin, 800, 0.5);
+    em1.step -= 10;
+    sm2.step += 10;
+    hm1.write(pos);
+    pos-= 0.3;
+    delayMicroseconds(100);    
   }
+}
+void maxReach(){
+  if (!digitalRead(em1.prox)){
+    UpDown();
+  }
+  else if (digitalRead(em1.prox)){ 
+    down(); 
+    if (em1.step <= 200){ 
+      up(); 
+    }
+  } 
+}
+
+void gripper(){ 
+  
+}
+void FwdBk(){
+    if (y > 600 && sm2.step >= 2225 &&(em1.step <= 7025 || em1.step >= 3235)){ 
+      digitalWrite(em1.dirpin, LOW);
+      digitalWrite(sm2.dirpin, HIGH);  
+      makeScaledStep(sm2.pin, em1.pin, 800, 0.5);
+      em1.step -= 5;
+      sm2.step += 10;   
+    }
+
+    else if(y > 600 && sm2.step <= 2225 && (em1.step <= 7025 || em1.step >= 3235)){
+      digitalWrite(em1.dirpin, LOW);
+      digitalWrite(sm2.dirpin, HIGH); 
+      makeScaledStep(sm2.pin, em1.pin, 800, 1.1);
+      em1.step -= 5;
+      sm2.step += 10;   
+    }
+   
+   if(y<150 && sm2.step >= 1920 && em1.step <= 3235){
+      digitalWrite(em1.dirpin, HIGH);
+      digitalWrite(sm2.dirpin, LOW); 
+      makeScaledStep(sm2.pin, em1.pin, 800, 0.5);
+      em1.step += 5;
+      sm2.step -= 10;   
+    }
+
+    else if(y<150 && sm2.step <= 1920 && em1.step <= 3235){
+      digitalWrite(em1.dirpin, HIGH); 
+      digitalWrite(sm2.dirpin, LOW); 
+      makeScaledStep(sm2.pin, em1.pin, 800, 1.1);
+      em1.step += 5;
+      sm2.step -= 10;
+    }
 }
 
 
@@ -265,10 +327,10 @@ int initialize_motors(){
   while (!digitalRead(4)) {
     makeStep(em1.pin, 600);
   }
-  em1.step = 0;
+  em1.step = 600;
   digitalWrite(em1.dirpin, HIGH);
-  makeSteps(em1.pin, 600, 2920);
-  em1.step = 2920;
+  makeSteps(em1.pin, 600, 1300);
+  em1.step = 1300;
 //
 //  digitalWrite(sm1.dirpin, LOW);
 //  while (!digitalRead(2)) {
@@ -285,8 +347,8 @@ int initialize_motors(){
   }
   sm2.step = 0;
   digitalWrite(sm2.dirpin, LOW);
-  makeSteps(sm2.pin, 600, 2800);
-  sm2.step = 2800;
+  makeSteps(sm2.pin, 600, 3500);
+  sm2.step = 3500;
 
   hm1.write(pos);   
 
@@ -377,13 +439,11 @@ void InvK(int inc, int adj, int dir){
   sm2deg = getDegree(sm2.pin, sm2.step);
   Y = l1(sin(sm2deg*0.0174533)) +  l2(sin((sm2deg*0.0174533)+(em1deg*0.0174533)));
   X = l1(cos(sm2deg*0.0174533)) +  l2(cos((sm2deg*0.0174533)+(em1deg*0.0174533)));
-
   if(X - inc){
     digitalWrite(sm2.dirpin, LOW);
     digitalWrite(em1.dirpin, LOW);
     makeStep2(sm2.pin, em1.pin, 1000);
   }
-
 }
 */
 
@@ -450,4 +510,3 @@ int DegToSteps(int motor, int deg){
 //  hm1.write(x); 
 //  grip.write(y);  
 //}
-
