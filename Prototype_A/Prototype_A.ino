@@ -115,7 +115,7 @@ void loop(){
   y_accel = ((int)values[3] << 8) | values[2];
   x_accel = ((int)values[1] << 8) | values[0];
 
-  if(digitalRead(mode)){
+  
   
     if(digitalRead(JOYSTICK_BUTTON)){
       FwdBk();      
@@ -123,9 +123,7 @@ void loop(){
     else{
       maxReach();
     }
-  }
   
-  else {
     
     if (x > 600){
       digitalWrite(sm1.dirpin, HIGH);
@@ -136,7 +134,7 @@ void loop(){
       digitalWrite(sm1.dirpin, LOW); 
       makeStep(sm1.pin, 800); 
     }
-  }
+  
   Serial.println(em1.step); 
 }
 
@@ -317,9 +315,9 @@ int initialize_motors(){
 
   digitalWrite(em2.dirpin, LOW); 
   makeStep(em2.pin, 600);
-  makeSteps(em2.pin, 600, 4000); 
+  makeSteps(em2.pin, 600, 3500); 
 
-  em2.step = 4000; 
+  em2.step = 3500; 
 
   hm1.write(0);
   
@@ -351,12 +349,13 @@ int initialize_motors(){
   sm2.step = 3500;
 
   hm1.write(pos);   
+  grip.write(90); 
 
 
-  digitalWrite(em2.dirpin, LOW); 
-  digitalWrite(em2.pin, 600); 
-  makeSteps(em2.pin, 600, 2000);
-  em2.step = 6000;
+//  digitalWrite(em2.dirpin, LOW); 
+//  digitalWrite(em2.pin, 600); 
+//  makeSteps(em2.pin, 600, 2000);
+//  em2.step = 6000;
   }
 
 void makeStep(int motor, int speed) {
