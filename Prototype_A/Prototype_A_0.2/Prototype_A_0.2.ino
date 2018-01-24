@@ -3,6 +3,11 @@
 //
 #include <Wire.h>
 #include <Servo.h>
+#include <String.h>
+
+String steps = "steps";
+String home = "home";
+
 #define accel_module (0x53) // accelerometer
 
 byte values[6] ;
@@ -90,16 +95,20 @@ void setup() {
   pinMode(sm1.prox, INPUT);
   pinMode(sm2.prox, INPUT);
   pinMode(em1.prox, INPUT);
+  pinMode(em2.prox, INPUT);
+  
   pinMode(41, INPUT_PULLUP);
   pinMode(mode, INPUT_PULLUP);
-  pinMode(5, INPUT); 
+  
   hm1.attach(13);
   hm1.write(pos);
+  
   grip.attach(12);
   grip.write(180);
 
   initialize_motors(); 
-  }
+  
+}
 
 void loop(){
  
@@ -161,6 +170,122 @@ void loop(){
 //                                                              Do not modify unless sure
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void motorHome(int pin, int steps, int home){
+  int correction;
+  if(steps > home){
+    switch(pin){
+      case 47:
+        digitalWrite(sm1.dirpin, LOW);
+        correction = steps - home;
+        Serial.print("SM1 moving -"); Serial.print(correction); Serial.println(" steps.");
+        break;
+      case 49:
+        digitalWrite(sm2.dirpin, HIGH);
+        correction = steps - home;
+        Serial.print("SM2 moving -"); Serial.print(correction); Serial.println(" steps.");
+        break;
+      case 50: 
+        digitalWrite(em1.dirpin, LOW);
+        correction = steps - home;
+        Serial.print("EM1 moving -"); Serial.print(correction); Serial.println(" steps.");
+        break;
+      case 53: 
+        digitalWrite(em2.dirpin, HIGH);
+        correction = steps - home;
+        Serial.print("EM2 moving -"); Serial.print(correction); Serial.println(" steps.");
+        break;
+      default:
+        Serial.println("Invalid Pin Selected.");
+        break;
+    }
+  }
+  else if(steps < home){
+    switch(pin){
+      case 47:
+        digitalWrite(sm1.dirpin, HIGH);
+        correction = home - steps;
+        Serial.print("SM1 moving +"); Serial.print(correction); Serial.println(" steps.");
+        break;
+      case 49:
+        digitalWrite(sm2.dirpin, LOW);
+        correction = home - steps;
+        Serial.print("SM2 moving +"); Serial.print(correction); Serial.println(" steps.");
+        break;
+      case 50: 
+        digitalWrite(em1.dirpin, HIGH);
+        correction = home - steps;
+        Serial.print("EM1 moving +"); Serial.print(correction); Serial.println(" steps.");
+        break;
+      case 53: 
+        digitalWrite(em2.dirpin, LOW);
+        correction = home - steps;
+        Serial.print("EM2 moving +"); Serial.print(correction); Serial.println(" steps.");
+        break;  
+      default :
+        Serial.println("Invalid Pin Argument");
+        break;
+    }
+  }
+  else{}
+    makeSteps(pin, 1000, correction);
+ }
+
+
+void gotoHome(){
+  motorHome(sm1.pin, sm1.step, sm1.home);
+  sm1.step = sm1.home;
+  motorHome(sm2.pin, sm2.step, sm2.home);
+  sm2.step = sm2.home;
+  //motorHome(em1.pin, em1.step, em1.home);
+  //em1.step = em1.home;
+  //motorHome(em2.pin, em2.step, em2.home);
+  //em2.step = em2.home;
+}
+
+void mPrint(String xyz){
+  if(xyz == "steps"){
+    Serial.println("\n SM1 SM2 EM1 EM2 ");
+    Serial.print("  "); Serial.print(sm1.step); Serial.print(" ");
+    Serial.print("  "); Serial.print(sm2.step); Serial.print(" ");
+    Serial.print("  "); Serial.print(em1.step); Serial.print(" ");
+    Serial.print("  "); Serial.print(em2.step); Serial.println(" ");
+  }
+  else if(xyz == "home"){
+    Serial.println("\n SM1 SM2 EM1 EM2 ");
+    Serial.print("  "); Serial.print(sm1.home); Serial.print(" ");
+    Serial.print("  "); Serial.print(sm2.home); Serial.print(" ");
+    Serial.print("  "); Serial.print(em1.home); Serial.print(" ");
+    Serial.print("  "); Serial.print(em2.home); Serial.println(" ");
+  }
+  else{
+    //Serial.println("\nInvalid Argument to mPrint");
+  }
+}
+
+void setHomePos(int x, int y, int z, int a){
+  sm1.home = x;
+  sm2.home = y;
+  em1.home = z;
+  em2.home = a;
+}
+
+int ButtonRead(int button){
+  count = 0;
+  while(!digitalRead(button)){
+    delay(10);
+    count++;
+  }
+  if(count > 100){
+    return 2;
+  }
+  else if(count > 0){
+    return 1;
+  }
+  else{
+    return 0;
+  }
+}
 
 void readVal(){
   int j = 0;
