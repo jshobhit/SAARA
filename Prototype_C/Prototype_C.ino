@@ -15,8 +15,8 @@ int count;
 byte values[6] ;
 char output[512];
 
-float pos = 110.0;
-float hm1Angle = 90; 
+float pos = 60.0;
+volatile float hm1Angle = 60; 
 float pos1 = 80; 
 #define numOfSteppers 4                  // SM1 SM2 EM1 EM2
 #define MODEPIN 40
@@ -106,7 +106,7 @@ void setup() {
   pinMode(39, INPUT_PULLUP); 
   pinMode(41, INPUT_PULLUP);
   hm1.attach(12);
-  hm1.write(pos);
+  hm1.write(hm1Angle);
   
   grip.attach(11);
   grip.write(pos1);
@@ -140,7 +140,7 @@ void loop(){
   }
   
   readVal();
-  
+
   y = analogRead(A0); 
   x = analogRead(A1);
   y_accel = ((int)values[3] << 8) | values[2];
@@ -164,10 +164,10 @@ void loop(){
   if (mode){
     if (digitalRead(JOYSTICK_BUTTON))
     { 
-      grip1();   
+      hm1move();   
     }
     else{
-      hm1move();
+      grip1();
     }
 
     em2move(); 
@@ -185,17 +185,17 @@ void loop(){
     
     if (x < 450){
       digitalWrite(sm1.dirpin, LOW);
-      makeStep(sm1.pin, 800);
+      makeStep(sm1.pin, 600);
       sm1.step--;
       }
   
     else if(x > 600){
       digitalWrite(sm1.dirpin, HIGH); 
-      makeStep(sm1.pin, 800);
+      makeStep(sm1.pin, 600);
       sm1.step++;
     }
   }
-//Serial.println(hm1Angle); 
+//  Serial.println(hm1Angle); 
 //  Serial.print("stepCountem1 ");Serial.print(stepCountem1); 
 //  Serial.print("  stepCountsm2 ");Serial.print(stepCountsm2);
 //  Serial.print("  em1.step "); Serial.print(em1.step);
@@ -277,10 +277,12 @@ void motorHome(int pin, int steps, int home){
 void gotoHome(){
   motorHome(sm1.pin, sm1.step, sm1.home);
   sm1.step = sm1.home;
-  motorHome(sm2.pin, sm2.step, sm2.home);
-  sm2.step = sm2.home;
   motorHome(em1.pin, em1.step, em1.home);
   em1.step = em1.home;
+  motorHome(sm2.pin, sm2.step, sm2.home);
+  sm2.step = sm2.home;
+//  motorHome(em1.pin, em1.step, em1.home);
+//  em1.step = em1.home;
   //motorHome(em2.pin, em2.step, em2.home);
   //em2.step = em2.home;
 }
@@ -346,8 +348,8 @@ void UpDown(){
     em1.step -= 10;
     sm2.step -= 5;
     if (em2.step >3276 && em2.step < 4761){
-    hm1.write(pos);
-    pos+= 0.3;
+    hm1.write(hm1Angle);
+    hm1Angle+= 0.3;
     delayMicroseconds(100);
     }    
   }
@@ -359,8 +361,8 @@ void UpDown(){
     em1.step -= 10;
     sm2.step += 5;
     if (em2.step >3276 && em2.step < 4761){
-    hm1.write(pos);
-    pos+= 0.4;
+    hm1.write(hm1Angle);
+    hm1Angle+= 0.4;
     delayMicroseconds(100);
     }    
   }
@@ -372,8 +374,8 @@ void UpDown(){
     em1.step += 10;
     sm2.step += 5;
     if (em2.step >3276 && em2.step < 4761){
-    hm1.write(pos);
-    pos-= 0.3;
+    hm1.write(hm1Angle);
+    hm1Angle-= 0.3;
     delayMicroseconds(100);
     }   
   }
@@ -385,8 +387,8 @@ void UpDown(){
     em1.step += 10;
     sm2.step -= 5;
     if (em2.step >3276 && em2.step < 4761){
-    hm1.write(pos);
-    pos-= 0.4;
+    hm1.write(hm1Angle);
+    hm1Angle-= 0.4;
     delayMicroseconds(100);
     }    
   }
@@ -400,8 +402,8 @@ void down(){
     em1.step -= 10;
     sm2.step -= 5;
     if (em2.step >3276 && em2.step < 4761){
-      hm1.write(pos);
-      pos+= 0.3;
+      hm1.write(hm1Angle);
+      hm1Angle+= 0.3;
       delayMicroseconds(100);
     }    
   }
@@ -413,47 +415,20 @@ void down(){
     em1.step -= 10;
     sm2.step += 5;
     if (em2.step >3276 && em2.step < 4761){
-      hm1.write(pos);
-      pos+= 0.4;
+      hm1.write(hm1Angle);
+      hm1Angle+= 0.4;
       delayMicroseconds(100);
     }    
   }
 }
 
-void up(){ 
-   if(y<450 && x_accel > 23){
-    digitalWrite(em1.dirpin, HIGH);
-    digitalWrite(sm2.dirpin, LOW); 
-    makeScaledStep(em1.pin, sm2.pin, 800, 0.5);
-    em1.step += 10;
-    sm2.step += 5;
-    if (em2.step >3276 && em2.step < 4761){
-      hm1.write(pos);
-      pos-= 0.3;
-      delayMicroseconds(100);   
-    }
-   }
-  else if(y<450 && x_accel < 23){
-    digitalWrite(em1.dirpin, HIGH); 
-    digitalWrite(sm2.dirpin, HIGH); 
-    makeScaledStep(em1.pin,sm2.pin, 800, 0.5);
-    em1.step += 10;
-    sm2.step -= 5;
-    if (em2.step >3276 && em2.step < 4761){
-      hm1.write(pos);
-      pos-= 0.4;
-      delayMicroseconds(100); 
-    }   
-  }
-}
 void maxReach(){
   if (em1.step <= 5000){
     UpDown();
  }
     if (em1.step >= 5000){ 
       down(); 
-    }
-  //} 
+    } 
 }
 
 void FwdBk(){
@@ -467,8 +442,8 @@ void FwdBk(){
       stepCountsm2 -= 10;
       
       if (em2.step >3276 && em2.step < 4761){
-        hm1.write(pos);
-        pos-= 0.05;
+        hm1.write(hm1Angle);
+        hm1Angle-= 0.05;
         delayMicroseconds(100); 
     }      
     }
@@ -482,8 +457,8 @@ void FwdBk(){
       stepCountem1 -= 5;
       stepCountsm2 -= 10;
       if (em2.step >3276 && em2.step < 4761){
-        hm1.write(pos);
-        pos+= 0.05;
+        hm1.write(hm1Angle);
+        hm1Angle+= 0.05;
         delayMicroseconds(100); 
     }      
     }
@@ -497,8 +472,8 @@ void FwdBk(){
       stepCountem1 += 9;
       stepCountsm2 += 10;
       if (em2.step >3276 && em2.step < 4761){
-        hm1.write(pos);
-        pos+= 0.05;
+        hm1.write(hm1Angle);
+        hm1Angle+= 0.05;
         delayMicroseconds(100); 
       }         
     }
@@ -512,8 +487,8 @@ void FwdBk(){
       stepCountem1 += 5;
       stepCountsm2 += 10;
       if (em2.step >3276 && em2.step < 4761){
-        hm1.write(pos);
-        pos-= 0.05;
+        hm1.write(hm1Angle);
+        hm1Angle-= 0.05;
         delayMicroseconds(100); 
       }      
     }
@@ -731,14 +706,14 @@ void em2move()
   if (x > 600)
   {
     digitalWrite(em2.dirpin, LOW);
-    makeStep(em2.pin, 800); 
+    makeStep(em2.pin, 600); 
     em2.step--;  
   }
 
   else if (x < 500) 
   {
     digitalWrite(em2.dirpin, HIGH); 
-    makeStep(em2.pin, 800); 
+    makeStep(em2.pin, 600); 
     em2.step++; 
   }
 }
