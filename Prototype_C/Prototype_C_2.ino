@@ -4,6 +4,10 @@
 #include <String.h>
 
 #define HOME_BUTTON 41 //Pin where home button is assigned to 
+#define numOfSteppers 4                  // SM1 SM2 EM1 EM2
+#define MODEPIN 39
+#define CALIPIN 42
+#define JOYSTICK_BUTTON 38
 
 /*For the usage of home button*/
 String steps = "steps";
@@ -20,12 +24,6 @@ char output[512];
 float pos = 60.0;
 volatile float hm1Angle = 60; 
 float pos1 = 80; 
-#define numOfSteppers 4                  // SM1 SM2 EM1 EM2
-#define MODEPIN 40
-#define CALIPIN 42
-#define JOYSTICK_BUTTON 38
-
-#define TEST 1
 
 const int stepperDirPins[numOfSteppers]  = {46, 48, 51, 52};
 const int stepperStepPins[numOfSteppers] = {47, 49, 50, 53};
@@ -108,6 +106,7 @@ void setup() {
 
   pinMode(39, INPUT_PULLUP); 
   pinMode(41, INPUT_PULLUP);
+  
   hm1.attach(12);
   hm1.write(hm1Angle);
   
@@ -158,7 +157,7 @@ void loop(){
   buttoncheck();
    if (modeFlag){ 
     delay(100);
-    mode1 = digitalRead(39);
+    mode1 = digitalRead(MODEPIN);
     if(mode1 == modeFlag){
       mode = !mode;
       modeFlag = 0;
@@ -343,8 +342,7 @@ void readVal(){
     j++;
   }
 }
-//
-//
+
 void UpDown(){
    if (y > 600 && x_accel > 23){ 
     digitalWrite(em1.dirpin, LOW);
@@ -501,7 +499,7 @@ void FwdBk(){
 
 
 void buttoncheck(){
-  modeFlag = digitalRead(39);
+  modeFlag = digitalRead(MODEPIN);
 //  caliFlag = !digitalRead(42);
 }
 
@@ -524,7 +522,7 @@ int initialize_motors(){
   hm1.write(160);
   
   digitalWrite(em1.dirpin, LOW);
-  while (!digitalRead(4)) {
+  while (!digitalRead(em1.pin)) {
     makeStep(em1.pin, 600);
   }
   em1.step = 600;
@@ -534,7 +532,7 @@ int initialize_motors(){
   em1.home = 2000;
 
   digitalWrite(sm1.dirpin, LOW);
-  while (!digitalRead(2)) {
+  while (!digitalRead(sm1.pin)) {
     makeStep(sm1.pin, 600);
   }
   sm1.step = 0;
@@ -544,7 +542,7 @@ int initialize_motors(){
   sm1.home = 2500;
   
   digitalWrite(sm2.dirpin, HIGH);
-  while (!digitalRead(3)) {
+  while (!digitalRead(sm2.pin)) {
     makeStep(sm2.pin, 600);  
   }
   sm2.step = 0;
@@ -554,14 +552,7 @@ int initialize_motors(){
   sm2.home = 3000;
   
   hm1.write(pos);   
-  //grip.write(pos1); 
-
-
-//  digitalWrite(em2.dirpin, LOW); 
-//  digitalWrite(em2.pin, 600); 
-//  makeSteps(em2.pin, 600, 2000);
-//  em2.step = 6000;
-  }
+}
 
 void makeStep(int motor, int speed) {
   digitalWrite(motor, HIGH);
@@ -737,7 +728,7 @@ void grip1()
   else {
     grip.write(85); 
   }
-}
+}0
 
 void hm1move()
 {
