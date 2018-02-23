@@ -2,6 +2,7 @@
 #include <Servo.h>
 #define accel_module (0x53) // accelerometer
 #define HOME_BUTTON 41
+#define DRINK_BUTTON  40
 
 byte values[6] ;
 char output[512];
@@ -9,7 +10,7 @@ char output[512];
 int val=0;
 int xyzregister = 0x32;
 
-int y_accel, x_accel; 
+int y_accel, x_accel, hm1home; 
 
 typedef struct {
   int pin;
@@ -20,6 +21,7 @@ typedef struct {
   int step = 0;
   int home;
   int enable; 
+  int home2;
 } motor;
 
 motor em1, em2, sm1, sm2;
@@ -37,9 +39,13 @@ volatile float hm1pos = 70;
 float gripperpos = 90; 
 
 volatile int modeFlag = 0;
+volatile int drinkFlag = 0; 
 int mode1; 
 int mode = 0;
+int drink1; 
+int drink = 0; 
 
+int drinkbut = 0;
 int homebut = 0;
 String steps = "steps";
 String home = "home";
@@ -77,6 +83,10 @@ void setup() {
   sm1.home = 0;
   sm2.home = 0;
   em1.home = 0;
+
+  sm1.home2 = 6547; 
+  sm2.home2 = 3100; 
+  em1.home2 = 2000; 
   
   pinMode(pb1, INPUT);
   pinMode(HOME_BUTTON, INPUT); 
@@ -122,6 +132,21 @@ void loop() {
     default:
       break;
   }
+
+  drinkbut = ButtonRead(DRINK_BUTTON);
+  switch(drinkbut){
+    case 1:
+      Serial.println("Going to Home Position");  
+      DrinkingPos();
+      break;
+      break;
+//    case 2:
+//      Serial.println("Setting new Home");
+//      setDrinkingPos(sm1.step, sm2.step, em1.step, em2.step);
+//      break;
+//    default:
+//      break;
+  }
   
   readVal();
 
@@ -155,31 +180,31 @@ void loop() {
   }
 
   else{
-    if (x > 550){ 
+    if (x < 450){ 
       digitalWrite(sm1.dirpin, HIGH); 
       makeStep(sm1.pin, 600);
-      sm1.step++;
+      sm1.step--;
       if (y > 600){ 
         makeSteps(sm1.pin, 900, 5);
-        sm1.step+=5;
+        sm1.step-=5;
       }
       else if (y < 450){ 
         makeSteps(sm1.pin, 900 , 5);
-        sm1.step+=5;
+        sm1.step-=5;
       }
 
     } 
-    else if(x < 450){ 
+    else if(x > 600){ 
       digitalWrite(sm1.dirpin, LOW); 
       makeStep(sm1.pin, 600);
-      sm1.step--;
+      sm1.step++;
       if (y < 450){ 
         makeSteps(sm1.pin, 900, 5);
-        sm1.step-=5;
+        sm1.step+=5;
       }
       if (y > 600){ 
         makeSteps(sm1.pin, 900, 5);
-        sm1.step-=5;
+        sm1.step+=5;
       }
 
     }
@@ -189,8 +214,28 @@ void loop() {
     else {
       fwdBk();
     }     
-  } 
-  Serial.println(em2.step);
+  }
+//  if (drinkFlag){ 
+//    delay(100);
+//    drink1 = digitalRead(40);
+//    if(drink1 == drinkFlag){
+//      drink = !drink;
+//      drinkFlag = 0;
+//    }
+//    else{
+//      drinkFlag = 0;
+//    }
+//   }
+// 
+//  
+//  if (drink){
+//  DrinkingPos();
+//  drink = 0;  
+//  }
+//
+//  Serial.print("sm1 steps: ");Serial.println(sm1.step); 
+//  Serial.print("  sm2 steps: ");Serial.print(sm2.step); 
+//  Serial.print("  em1 steps: ");Serial.println(em1.step);  
 }
 
 void makeStep(int motor, int speed) {
@@ -241,7 +286,7 @@ void fwdBk(){
         delayMicroseconds(100); 
     }     
   }
-  else if (y > 600 && sm2.step <= 1776 && em1.step >= -2178) {
+  else if (y > 600 && sm2.step <= 1776) {
     digitalWrite(sm2.dirpin, LOW);
     digitalWrite(em1.dirpin, HIGH);
     makeScaledStep(sm2.pin, em1.pin, 400, 0.4);
@@ -253,7 +298,7 @@ void fwdBk(){
         delayMicroseconds(100); 
     }      
   }
-  else if (y > 600 && sm2.step >= 1776 && em1.step >= -2178 ){
+  else if (y > 600 && sm2.step >= 1776){
     digitalWrite(sm2.dirpin, LOW);
     digitalWrite(em1.dirpin, HIGH); 
     makeScaledStep(sm2.pin, em1.pin, 400, 0.6); 
@@ -416,14 +461,17 @@ void em2move()
 
 void buttoncheck(){
   modeFlag = digitalRead(39);
+  drinkFlag = digitalRead(40); 
 }
 
+
+
 void motorHome(int pin, int steps, int home){
-  int correction;
+  int correction,hm1home;
   if(steps > home){
     switch(pin){
       case 13:
-        digitalWrite(sm1.dirpin, LOW);
+        digitalWrite(sm1.dirpin, HIGH);
         correction = steps - home;
         Serial.print("SM1 moving -"); Serial.print(correction); Serial.println(" steps.");
         break;
@@ -437,20 +485,21 @@ void motorHome(int pin, int steps, int home){
         correction = steps - home;
         Serial.print("EM1 moving -"); Serial.print(correction); Serial.println(" steps.");
         break;
-      case 53: 
+      case 3: 
         digitalWrite(em2.dirpin, HIGH);
         correction = steps - home;
         Serial.print("EM2 moving -"); Serial.print(correction); Serial.println(" steps.");
         break;
       default:
         Serial.println("Invalid Pin Selected.");
-        break;
+        break;        
     }
+    hm1home = 0;
   }
   else if(steps < home){
     switch(pin){
       case 13:
-        digitalWrite(sm1.dirpin, HIGH);
+        digitalWrite(sm1.dirpin, LOW);
         correction = home - steps;
         Serial.print("SM1 moving +"); Serial.print(correction); Serial.println(" steps.");
         break;
@@ -464,7 +513,7 @@ void motorHome(int pin, int steps, int home){
         correction = home - steps;
         Serial.print("EM1 moving +"); Serial.print(correction); Serial.println(" steps.");
         break;
-      case 53: 
+      case 3: 
         digitalWrite(em2.dirpin, LOW);
         correction = home - steps;
         Serial.print("EM2 moving +"); Serial.print(correction); Serial.println(" steps.");
@@ -472,7 +521,8 @@ void motorHome(int pin, int steps, int home){
       default :
         Serial.println("Invalid Pin Argument");
         break;
-    }
+      }
+  hm1home = 1;
   }
   else{}
     makeSteps(pin, 400, correction);
@@ -485,7 +535,7 @@ void gotoHome(){
   motorHome(em1.pin, em1.step, em1.home);
   em1.step = em1.home;
   motorHome(sm2.pin, sm2.step, sm2.home);
-  sm2.step = sm2.home;
+  sm2.step = sm2.home;        
 //  motorHome(em1.pin, em1.step, em1.home);
 //  em1.step = em1.home;
   //motorHome(em2.pin, em2.step, em2.home);
@@ -534,5 +584,82 @@ int ButtonRead(int button){
   else{
     return 0;
   }
+}
+
+void motorHome1(int pin, int steps, int home2){
+  int correction1,hm1home;
+  if(steps > home2){
+    switch(pin){
+      case 13:
+        digitalWrite(sm1.dirpin, HIGH);
+        correction1 = steps - home2;
+        Serial.print("SM1 moving -"); Serial.print(correction1); Serial.println(" steps.");
+        break;
+      case 8:
+        digitalWrite(sm2.dirpin, LOW);
+        correction1 = steps - home2;
+        Serial.print("SM2 moving -"); Serial.print(correction1); Serial.println(" steps.");
+        break;
+      case 10: 
+        digitalWrite(em1.dirpin, HIGH);
+        correction1 = steps - home2;
+        Serial.print("EM1 moving -"); Serial.print(correction1); Serial.println(" steps.");
+        break;
+      case 3: 
+        digitalWrite(em2.dirpin, HIGH);
+        correction1 = steps - home2;
+        Serial.print("EM2 moving -"); Serial.print(correction1); Serial.println(" steps.");
+        break;
+      default:
+        Serial.println("Invalid Pin Selected.");
+        break;        
+    }
+    hm1home = 0;
+  }
+  else if(steps < home2){
+    switch(pin){
+      case 13:
+        digitalWrite(sm1.dirpin, LOW);
+        correction1 = home2 - steps;
+        Serial.print("SM1 moving +"); Serial.print(correction1); Serial.println(" steps.");
+        break;
+      case 8:
+        digitalWrite(sm2.dirpin, HIGH);
+        correction1 = home2 - steps;
+        Serial.print("SM2 moving +"); Serial.print(correction1); Serial.println(" steps.");
+        break;
+      case 10: 
+        digitalWrite(em1.dirpin, LOW);
+        correction1 = home2 - steps;
+        Serial.print("EM1 moving +"); Serial.print(correction1); Serial.println(" steps.");
+        break;
+      case 3: 
+        digitalWrite(em2.dirpin, LOW);
+        correction1 = home2 - steps;
+        Serial.print("EM2 moving +"); Serial.print(correction1); Serial.println(" steps.");
+        break;  
+      default :
+        Serial.println("Invalid Pin Argument");
+        break;
+      }
+  hm1home = 1;
+  }
+  else{}
+    makeSteps(pin, 400, correction1);
+ }
+void DrinkingPos(){
+  motorHome1(sm1.pin, sm1.step, sm1.home2);
+  sm1.step = sm1.home2;
+  motorHome1(em1.pin, em1.step, em1.home2);
+  em1.step = em1.home2;
+  motorHome1(sm2.pin, sm2.step, sm2.home2);
+  sm2.step = sm2.home2;        
+}
+
+void setDrinkingPos(int b, int c, int d, int e){
+  sm1.home = b;
+  sm2.home = c;
+  em1.home = d;
+  em2.home = e;
 }
 
