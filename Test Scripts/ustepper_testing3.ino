@@ -140,12 +140,12 @@ void loop() {
       DrinkingPos();
       break;
       break;
-//    case 2:
-//      Serial.println("Setting new Home");
-//      setDrinkingPos(sm1.step, sm2.step, em1.step, em2.step);
-//      break;
-//    default:
-//      break;
+    case 2:
+      Serial.println("Setting new Home");
+      setDrinkingPos(sm1.step, sm2.step, em1.step, em2.step);
+      break;
+    default:
+      break;
   }
   
   readVal();
@@ -215,27 +215,6 @@ void loop() {
       fwdBk();
     }     
   }
-//  if (drinkFlag){ 
-//    delay(100);
-//    drink1 = digitalRead(40);
-//    if(drink1 == drinkFlag){
-//      drink = !drink;
-//      drinkFlag = 0;
-//    }
-//    else{
-//      drinkFlag = 0;
-//    }
-//   }
-// 
-//  
-//  if (drink){
-//  DrinkingPos();
-//  drink = 0;  
-//  }
-//
-//  Serial.print("sm1 steps: ");Serial.println(sm1.step); 
-//  Serial.print("  sm2 steps: ");Serial.print(sm2.step); 
-//  Serial.print("  em1 steps: ");Serial.println(em1.step);  
 }
 
 void makeStep(int motor, int speed) {
@@ -657,9 +636,9 @@ void DrinkingPos(){
 }
 
 void setDrinkingPos(int b, int c, int d, int e){
-  sm1.home = b;
-  sm2.home = c;
-  em1.home = d;
-  em2.home = e;
+  sm1.home2 = b;
+  sm2.home2 = c;
+  em1.home2 = d;
+  em2.home2 = e;
 }
 
