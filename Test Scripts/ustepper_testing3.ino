@@ -1,5 +1,7 @@
 #include <Wire.h>
 #include <Servo.h>
+#include <EEPROM.h> 
+
 #define accel_module (0x53) // accelerometer
 #define HOME_BUTTON 41
 #define DRINK_BUTTON  40
@@ -50,7 +52,7 @@ int homebut = 0;
 String steps = "steps";
 String home = "home";
 int count; 
-
+ 
 void setup() {
   Wire.begin();
   Wire.beginTransmission(accel_module);
@@ -80,13 +82,13 @@ void setup() {
   sm2.step = 0; 
   em1.step = 0;
 
-  sm1.home = 0;
-  sm2.home = 0;
-  em1.home = 0;
+  sm1.home = (EEPROM.read(6)*255) + EEPROM.read(7); 
+  sm2.home = (EEPROM.read(8)*255) + EEPROM.read(9); 
+  em1.home = (EEPROM.read(10)*255) + EEPROM.read(11); 
 
-  sm1.home2 = 6547; 
-  sm2.home2 = 3100; 
-  em1.home2 = 2000; 
+  sm1.home2 = (EEPROM.read(0)*255) + EEPROM.read(1); 
+  sm2.home2 = (EEPROM.read(2)*255) + EEPROM.read(3); 
+  em1.home2 = (EEPROM.read(4)*255) + EEPROM.read(5); 
   
   pinMode(pb1, INPUT);
   pinMode(HOME_BUTTON, INPUT); 
@@ -180,7 +182,7 @@ void loop() {
   }
 
   else{
-    if (x < 450){ 
+    if (x > 600){ 
       digitalWrite(sm1.dirpin, HIGH); 
       makeStep(sm1.pin, 600);
       sm1.step--;
@@ -194,7 +196,7 @@ void loop() {
       }
 
     } 
-    else if(x > 600){ 
+    else if(x < 450){ 
       digitalWrite(sm1.dirpin, LOW); 
       makeStep(sm1.pin, 600);
       sm1.step++;
@@ -210,11 +212,13 @@ void loop() {
     }
     if(digitalRead(joystick_button)){
       maxReach();
+//      upDown();
     }
     else {
       fwdBk();
     }     
   }
+//  Serial.println(sm1.step);
 }
 
 void makeStep(int motor, int speed) {
@@ -372,10 +376,10 @@ void down(){
 }
 
 void maxReach(){
-  if (em1.step <= 6946){
+  if (em1.step <= 7185){
     upDown();
   }
-  if (em1.step >= 10000){ 
+  else if (em1.step >= 7185){ 
     down(); 
   } 
 }
@@ -543,8 +547,23 @@ void mPrint(String xyz){
 
 void setHomePos(int x, int y, int z, int a){
   sm1.home = x;
+  int q = sm1.home/255;
+  EEPROM.write(6, q);
+  int r = sm1.home % 255; 
+  EEPROM.write(7, r);
+  
   sm2.home = y;
+  int s = sm2.home/255;
+  EEPROM.write(8, s);
+  int t = sm2.home % 255; 
+  EEPROM.write(9, t);
+  
   em1.home = z;
+  int u = em1.home/255;
+  EEPROM.write(10, u);
+  int v = em1.home % 255; 
+  EEPROM.write(11, v);
+
   em2.home = a;
 }
 
@@ -637,8 +656,23 @@ void DrinkingPos(){
 
 void setDrinkingPos(int b, int c, int d, int e){
   sm1.home2 = b;
+  int j = sm1.home2/255;
+  EEPROM.write(0, j);
+  int k = sm1.home2 % 255; 
+  EEPROM.write(1, k);
+  
   sm2.home2 = c;
+  int l = sm2.home2/255;
+  EEPROM.write(2, l);
+  int m = sm2.home2 % 255; 
+  EEPROM.write(3, m);
+  
   em1.home2 = d;
+  int o = em1.home2/255;
+  EEPROM.write(4, 0);
+  int p = em1.home2 % 255; 
+  EEPROM.write(5, p);
+
   em2.home2 = e;
 }
 
