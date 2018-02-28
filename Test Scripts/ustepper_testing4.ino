@@ -5,12 +5,10 @@
 #define SM1Address2 0
 #define SM2Address2 2
 #define EM1Address2 4
-#define EM2Address2 14 
 
 #define SM1Address 6
 #define SM2Address 8
 #define EM1Address 10
-#define EM2Address 12
 
 #define accel_module (0x53) // accelerometer
 #define HOME_BUTTON 41
@@ -20,6 +18,9 @@ byte values[6] ;
 char output[512];
 
 int dir;
+
+int em2step = 1171;
+int em2home = 1171;  
 
 int val=0;
 int xyzregister = 0x32;
@@ -105,12 +106,12 @@ void setup() {
   sm1.home = (EEPROM.read(6)*255) + EEPROM.read(7); 
   sm2.home = (EEPROM.read(8)*255) + EEPROM.read(9); 
   em1.home = (EEPROM.read(10)*255) + EEPROM.read(11); 
-  em2.home = (EEPROM.read(12)*255) + EEPROM.read(13); 
+  em2.home = 0; 
   
   sm1.home2 = (EEPROM.read(0)*255) + EEPROM.read(1); 
   sm2.home2 = (EEPROM.read(2)*255) + EEPROM.read(3); 
   em1.home2 = (EEPROM.read(4)*255) + EEPROM.read(5); 
-  em2.home2 = (EEPROM.read(14)*255) + EEPROM.read(15); 
+  em2.home2 = 0; 
   
   pinMode(pb1, INPUT);
   pinMode(HOME_BUTTON, INPUT); 
@@ -229,10 +230,10 @@ void loop() {
       fwdBk();
     }     
   }
-  
   if (digitalRead(43)){
     doorOpen();
   }
+  Serial.println(em2.step); 
 }
 
 /*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
@@ -248,6 +249,15 @@ void makeStep(int motor, int speed) {
   delayMicroseconds(speed);
 }
 
+void makeStep2(int motor1, int motor2, int speed) {
+  digitalWrite(motor1, HIGH);
+  digitalWrite(motor2, HIGH);
+  delayMicroseconds(speed);
+  digitalWrite(motor1, LOW);
+  digitalWrite(motor2, LOW);
+  delayMicroseconds(speed);
+}
+
 void makeSteps(int motor, int speed, int steps) {
   int x = 1;
   while (x <= steps) {
@@ -255,6 +265,15 @@ void makeSteps(int motor, int speed, int steps) {
     x++;
   }
 }
+
+void makeSteps2(int motor1, int motor2, int speed, int steps) {
+  int x = 1;
+  while (x <= steps) {
+    makeStep2(motor1, motor2, speed);
+    x++;
+  }
+}
+
 void makeScaledStep(int motor1, int motor2, int speed, float scale){
   int step1 = 5;
   int step2 = 5;
@@ -452,13 +471,15 @@ void em2move()
   {
     digitalWrite(em2.dirpin, LOW);
     makeStep(em2.pin, 600); 
-    em2.step++;  
+    em2.step++;
+    em2step++;  
   }
   else if (x > 600) 
   {
     digitalWrite(em2.dirpin, HIGH); 
     makeStep(em2.pin, 600); 
-    em2.step--; 
+    em2.step--;
+    em2step--; 
   }
 }
 
@@ -470,7 +491,7 @@ void buttoncheck(){
 
 
 void motorHome(int pin, int steps, int home){
-  int correction,moveservo,moveservo1, dir;
+  int correction,moveservo,moveservo1, dir1;
   if(steps > home){
     switch(pin){
       case 13:
@@ -493,8 +514,8 @@ void motorHome(int pin, int steps, int home){
         moveservo1 = 1; 
         dir = 0;
         break;
-      case 23: 
-        digitalWrite(em2.dirpin, LOW);
+      case 22: 
+        digitalWrite(em2.dirpin, HIGH);
         correction = steps - home;
         Serial.print("EM2 moving -"); Serial.print(correction); Serial.println(" steps.");
         moveservo = 0;
@@ -526,8 +547,8 @@ void motorHome(int pin, int steps, int home){
         moveservo1 = 1; 
         dir = 1;
         break;
-      case 23: 
-        digitalWrite(em2.dirpin, HIGH);
+      case 22: 
+        digitalWrite(em2.dirpin, LOW);
         correction = home - steps;
         Serial.print("EM2 moving +"); Serial.print(correction); Serial.println(" steps.");
         moveservo = 0;  
@@ -555,6 +576,8 @@ void gotoHome(){
   em1.step = em1.home;
   motorHome(sm2.pin, sm2.step, sm2.home);
   sm2.step = sm2.home;        
+//  motorHome(em1.pin, em1.step, em1.home);
+//  em1.step = em1.home;
   motorHome(em2.pin, em2.step, em2.home);
   em2.step = em2.home;
 }
@@ -590,7 +613,6 @@ void setHomePos(int x, int y, int z, int a){
   setHome(em1.home, EM1Address); 
   
   em2.home = a;
-  setHome(em2.home, EM2Address); 
 }
 
 int ButtonRead(int button){
@@ -634,7 +656,7 @@ void motorHome1(int pin, int steps, int home2){
         moveservo1 = 1;
         dir = 0;
         break;
-      case 23: 
+      case 22: 
         digitalWrite(em2.dirpin, HIGH);
         correction1 = steps - home2;
         Serial.print("EM2 moving -"); Serial.print(correction1); Serial.println(" steps.");
@@ -668,7 +690,7 @@ void motorHome1(int pin, int steps, int home2){
         moveservo1 = 1; 
         dir = 1;
         break;
-      case 23: 
+      case 22: 
         digitalWrite(em2.dirpin, LOW);
         correction1 = home2 - steps;
         Serial.print("EM2 moving +"); Serial.print(correction1); Serial.println(" steps.");
@@ -762,11 +784,11 @@ void makeServoSteps(int motor, int speed, int correction, int direction){
 }
 
 void doorOpen(){
-  digitalWrite(em2.dirpin, LOW);
-  makeSteps(em2.pin, 800, 1171);
+  digitalWrite(em2.dirpin, LOW);  
+  digitalWrite(em1.dirpin, HIGH); 
+  makeSteps2(em2.pin, em1.pin, 600, 500);
+  makeSteps(em2.pin, 600, 671);   
+  em1.step -= 500;   
   em2.step += 1171;
-//  digitalWrite(em2.dirpin, LOW);
-//  makeSteps(em1.pin, 800,902);
-//  em1.step -= 902; 
 }
 
