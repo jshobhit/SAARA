@@ -20,6 +20,7 @@ byte values[6] ;
 char output[512];
 
 int dir;
+float upDownCount; 
 
 int em2step = 1171;
 int em2home = 1171;  
@@ -235,7 +236,7 @@ void loop() {
   if (digitalRead(43)){
     doorOpen();
   }
-  Serial.println(em1.step);
+  Serial.println(upDownCount);
 }
 
 /*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
@@ -323,7 +324,7 @@ void fwdBk(){
     digitalWrite(em1.dirpin, LOW); 
     makeScaledStep(sm2.pin, em1.pin, 400, 0.4); 
     sm2.step+= 5;
-    em1.step+= 2;  
+    em1.step+= 2;   
 //    if (em2.step >-1072 && em2.step < 1072){
 //        hm1.write(hm1pos);
 //        hm1pos-= 0.008;
@@ -335,7 +336,7 @@ void fwdBk(){
     digitalWrite(em1.dirpin, LOW); 
     makeScaledStep(sm2.pin, em1.pin, 400, 0.6); 
     sm2.step+= 5;
-    em1.step+= 3;
+    em1.step+= 3; 
 //    if (em2.step >-1072 && em2.step < 1072){
 //        hm1.write(hm1pos);
 //        hm1pos-= 0.008;
@@ -359,7 +360,7 @@ void fwdBk(){
     digitalWrite(em1.dirpin, HIGH); 
     makeScaledStep(sm2.pin, em1.pin, 400, 0.6); 
     sm2.step -= 5;
-    em1.step -= 3;
+    em1.step -= 3; 
 //    if (em2.step >-1072 && em2.step < 1072){
 //        hm1.write(hm1pos);
 //        hm1pos+= 0.008;
@@ -368,12 +369,13 @@ void fwdBk(){
   }
 }
 void upDown(){
-   if (y < 450 && em1.step >= 0){ 
+   if (y < 450 && upDownCount >= 0){ 
     digitalWrite(em1.dirpin, LOW);
     digitalWrite(sm2.dirpin, HIGH);  
     makeScaledStep(em1.pin, sm2.pin, 400 , 0.6);
     em1.step += 5;
     sm2.step += 3;
+    upDownCount ++;
     if (em2.step > -1072 && em2.step < 1072){
     hm1.write(hm1pos);
     hm1pos+= 0.07;
@@ -381,12 +383,13 @@ void upDown(){
     }    
   }
 
-  else if(y < 450 && em1.step <= 0){
+  else if(y < 450 && upDownCount <= 0){
     digitalWrite(em1.dirpin, LOW);
     digitalWrite(sm2.dirpin, LOW); 
     makeScaledStep(em1.pin, sm2.pin, 400, 0.6);
     em1.step += 5;
     sm2.step -= 3;
+    upDownCount ++;
     if (em2.step >-1072 && em2.step < 1072){
     hm1.write(hm1pos);
     hm1pos+= 0.07;
@@ -394,12 +397,13 @@ void upDown(){
     }    
   }
    
-   if(y > 600 && em1.step >= 0){
+   if(y > 600 && upDownCount >= 0){
     digitalWrite(em1.dirpin, HIGH);
     digitalWrite(sm2.dirpin, LOW); 
     makeScaledStep(em1.pin, sm2.pin, 400, 0.6);
     em1.step -= 5;
     sm2.step -= 3;
+    upDownCount --; 
     if (em2.step > -1072 && em2.step < 1072){
     hm1.write(hm1pos);
     hm1pos-= 0.07;
@@ -407,12 +411,13 @@ void upDown(){
     }   
   }
 
-  else if(y > 600 && em1.step <= 0){
+  else if(y > 600 && upDownCount <= 0){
     digitalWrite(em1.dirpin, HIGH); 
     digitalWrite(sm2.dirpin, HIGH); 
     makeScaledStep(em1.pin,sm2.pin, 400, 0.6);
     em1.step -= 5;
     sm2.step += 3;
+    upDownCount --;
     if (em2.step > -1072 && em2.step < 1072){
     hm1.write(hm1pos);
     hm1pos-= 0.07;
@@ -421,12 +426,13 @@ void upDown(){
   }
 }
 void down(){
-  if(y > 600 && em1.step >= 0){
+  if(y > 600 && upDownCount >= 0){
     digitalWrite(em1.dirpin, HIGH);
     digitalWrite(sm2.dirpin, LOW); 
     makeScaledStep(em1.pin, sm2.pin, 400, 0.6);
     em1.step -= 5;
     sm2.step -= 3;
+    upDownCount --;
     if (em2.step >-1072 && em2.step < 1072){
     hm1.write(hm1pos);
     hm1pos-= 0.07;
@@ -434,12 +440,13 @@ void down(){
     }   
   }
 
-  else if(y > 600 && em1.step <= 0){
+  else if(y > 600 && upDownCount <= 0){
     digitalWrite(em1.dirpin, HIGH); 
     digitalWrite(sm2.dirpin, HIGH); 
     makeScaledStep(em1.pin,sm2.pin, 400, 0.6);
     em1.step -= 5;
     sm2.step += 3;
+    upDownCount --; 
     if (em2.step > -1072 && em2.step < 1072){
     hm1.write(hm1pos);
     hm1pos-= 0.07;
