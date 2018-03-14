@@ -76,7 +76,7 @@ int mode1;
 int mode = 0;
 int power1;
 int power = 0;
-int speed; 
+int speed, speed2; 
 int timer = 0;
 int drinkbut = 0;
 int homebut = 0;
@@ -197,10 +197,10 @@ void loop()
   y = analogRead(A1);
   x = analogRead(A0);
   if(y > 850 || y < 300){
-    speed = 400;
+    speed2 = 400;
   }
   else{
-    speed = 800;
+    speed2 = 800;
   }
 
   if (modeFlag)
@@ -407,7 +407,7 @@ void fwdBk()
   {
     digitalWrite(sm2.dirpin, LOW);
     digitalWrite(em1.dirpin, LOW);
-    makeScaledStep2(sm2.pin, em1.pin, speed*2, speed, 0.9);
+    makeScaledStep2(sm2.pin, em1.pin, speed2*2, speed2, 0.9);
     sm2.step += 10;
     em1.step += 9;
     //    if (em2.step >-1072 && em2.step < 1072){
@@ -420,7 +420,7 @@ void fwdBk()
   {
     digitalWrite(sm2.dirpin, LOW);
     digitalWrite(em1.dirpin, LOW);
-    makeScaledStep2(sm2.pin, em1.pin, speed*2, speed, 1.1);
+    makeScaledStep2(sm2.pin, em1.pin, speed2*2, speed2, 1.1);
     sm2.step += 10;
     em1.step += 10;
     //    if (em2.step >-1072 && em2.step < 1072){
@@ -433,7 +433,7 @@ void fwdBk()
   {
     digitalWrite(sm2.dirpin, HIGH);
     digitalWrite(em1.dirpin, HIGH);
-    makeScaledStep2(sm2.pin, em1.pin, speed*2, speed, 0.9);
+    makeScaledStep2(sm2.pin, em1.pin, speed2*2, speed2, 0.9);
     sm2.step -= 10;
     em1.step -= 9;
     //    if (em2.step >-1072 && em2.step < 1072){
@@ -446,7 +446,7 @@ void fwdBk()
   {
     digitalWrite(sm2.dirpin, HIGH);
     digitalWrite(em1.dirpin, HIGH);
-    makeScaledStep2(sm2.pin, em1.pin, speed*2, speed, 1.1);
+    makeScaledStep2(sm2.pin, em1.pin, speed2*2, speed2, 1.1);
     sm2.step -= 10;
     em1.step -= 10;
     //    if (em2.step >-1072 && em2.step < 1072){
@@ -466,14 +466,14 @@ void upDown()
   {
     digitalWrite(em1.dirpin, LOW);
     digitalWrite(sm2.dirpin, LOW);
-    makeScaledStep2(em1.pin, sm2.pin, speed, speed*2, 0.3);
+    makeScaledStep2(em1.pin, sm2.pin, speed2, speed2*2, 0.3);
     em1.step += 10;
     sm2.step += 3;
     upDownCount += 5;
     if (em2.step > -1072 && em2.step < 1072)
     {
       hm1.write(hm1pos);
-      hm1pos -= 0.15;
+      hm1pos -= 0.12;
       delayMicroseconds(100);
     }
   }
@@ -482,14 +482,14 @@ void upDown()
   {
     digitalWrite(em1.dirpin, LOW);
     digitalWrite(sm2.dirpin, HIGH);
-    makeScaledStep2(em1.pin, sm2.pin, speed, speed*2, 0.3);
+    makeScaledStep2(em1.pin, sm2.pin, speed2, speed2*2, 0.3);
     em1.step += 10;
     sm2.step -= 3;
     upDownCount += 5;
     if (em2.step > -1072 && em2.step < 1072)
     {
       hm1.write(hm1pos);
-      hm1pos -= 0.15;
+      hm1pos -= 0.12;
       delayMicroseconds(100);
     }
   }
@@ -498,14 +498,14 @@ void upDown()
   {
     digitalWrite(em1.dirpin, HIGH);
     digitalWrite(sm2.dirpin, HIGH);
-    makeScaledStep2(em1.pin, sm2.pin, speed, speed*2, 0.3);
+    makeScaledStep2(em1.pin, sm2.pin, speed2, speed2*2, 0.3);
     em1.step -= 10;
     sm2.step -= 3;
     upDownCount -= 5;
     if (em2.step > -1072 && em2.step < 1072)
     {
       hm1.write(hm1pos);
-      hm1pos += 0.15;
+      hm1pos += 0.12;
       delayMicroseconds(100);
     }
   }
@@ -514,14 +514,14 @@ void upDown()
   {
     digitalWrite(em1.dirpin, HIGH);
     digitalWrite(sm2.dirpin, LOW);
-    makeScaledStep2(em1.pin, sm2.pin, speed, speed*2, 0.3);
+    makeScaledStep2(em1.pin, sm2.pin, speed2, speed2*2, 0.3);
     em1.step -= 10;
     sm2.step += 3;
     upDownCount -= 5;
     if (em2.step > -1072 && em2.step < 1072)
     {
       hm1.write(hm1pos);
-      hm1pos += 0.15;
+      hm1pos += 0.12;
       delayMicroseconds(100);
     }
   }
@@ -532,14 +532,14 @@ void down()
   {
     digitalWrite(em1.dirpin, HIGH);
     digitalWrite(sm2.dirpin, HIGH);
-    makeScaledStep2(em1.pin, sm2.pin, speed, speed*2, 0.3);
+    makeScaledStep2(em1.pin, sm2.pin, speed2, speed2*2, 0.3);
     em1.step -= 10;
     sm2.step -= 3;
     upDownCount -= 1;
     if (em2.step > -1072 && em2.step < 1072)
     {
       hm1.write(hm1pos);
-      hm1pos += 0.15;
+      hm1pos += 0.12;
       delayMicroseconds(100);
     }
   }
@@ -548,14 +548,14 @@ void down()
   {
     digitalWrite(em1.dirpin, HIGH);
     digitalWrite(sm2.dirpin, LOW);
-    makeScaledStep2(em1.pin, sm2.pin, speed, speed*2, 0.3);
+    makeScaledStep2(em1.pin, sm2.pin, speed2, speed2*2, 0.3);
     em1.step -= 10;
     sm2.step += 3;
     upDownCount -= 5;
     if (em2.step > -1072 && em2.step < 1072)
     {
       hm1.write(hm1pos);
-      hm1pos += 0.5;
+      hm1pos += 0.12;
       delayMicroseconds(100);
     }
   }
